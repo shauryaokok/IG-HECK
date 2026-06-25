@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Login</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-box {
+            background: white;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+        }
+
+        .instagram-logo {
+            font-size: 28px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 30px;
+            font-family: 'Arial Black', sans-serif;
+            letter-spacing: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: #999;
+            margin-bottom: 6px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            background: #fafafa;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .login-btn, .signup-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .login-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .signup-btn {
+            background: #f0f0f0;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .signup-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            display: none;
+            border: 1px solid #fcc;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .success {
+            background: #efe;
+            color: #3c3;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            display: none;
+            border: 1px solid #cfc;
+        }
+
+        .success.show {
+            display: block;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .user-info {
+            display: none;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .user-info.show {
+            display: block;
+        }
+
+        .user-info h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .user-info p {
+            color: #666;
+            font-size: 13px;
+            word-break: break-all;
+            margin-bottom: 15px;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .logout-btn {
+            background: #999;
+            padding: 10px 20px;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .logout-btn:hover {
+            background: #777;
+        }
+
+        .form-container {
+            display: block;
+        }
+
+        .form-container.hidden {
+            display: none;
+        }
+
+        .toggle-form {
+            margin-top: 15px;
+            font-size: 13px;
+            color: #999;
+        }
+
+        .toggle-form a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .toggle-form a:hover {
+            color: #764ba2;
+        }
+
+        .form-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="login-box">
+            <div class="instagram-logo">📷 INSTAGRAM</div>
+
+            <div id="error" class="error"></div>
+            <div id="success" class="success"></div>
+
+            <!-- LOGIN FORM -->
+            <div id="loginForm" class="form-container">
+                <div class="form-title">LOGIN</div>
+                <form id="loginFormElement">
+                    <div class="form-group">
+                        <label for="loginUsername">USERNAME</label>
+                        <input 
+                            type="text" 
+                            id="loginUsername" 
+                            placeholder="Enter your username"
+                            required
+                            autocomplete="off"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="loginPassword">PASSWORD</label>
+                        <input 
+                            type="password" 
+                            id="loginPassword" 
+                            placeholder="Enter your password"
+                            required
+                            autocomplete="off"
+                        >
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="login-btn" id="loginBtn">LOG IN</button>
+                        <button type="button" class="signup-btn" onclick="toggleForms()">SIGN UP</button>
+                    </div>
+                </form>
+                <div class="loading" id="loginLoading">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+
+            <!-- SIGNUP FORM -->
+            <div id="signupForm" class="form-container hidden">
+                <div class="form-title">CREATE ACCOUNT</div>
+                <form id="signupFormElement">
+                    <div class="form-group">
+                        <label for="signupUsername">USERNAME</label>
+                        <input 
+                            type="text" 
+                            id="signupUsername" 
+                            placeholder="Choose a username"
+                            required
+                            autocomplete="off"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signupPassword">PASSWORD</label>
+                        <input 
+                            type="password" 
+                            id="signupPassword" 
+                            placeholder="Create a password"
+                            required
+                            autocomplete="off"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signupConfirmPassword">CONFIRM PASSWORD</label>
+                        <input 
+                            type="password" 
+                            id="signupConfirmPassword" 
+                            placeholder="Confirm your password"
+                            required
+                            autocomplete="off"
+                        >
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="login-btn" id="signupBtn">CREATE ACCOUNT</button>
+                        <button type="button" class="signup-btn" onclick="toggleForms()">BACK</button>
+                    </div>
+                </form>
+                <div class="loading" id="signupLoading">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+
+            <!-- USER INFO DISPLAY -->
+            <div class="user-info" id="userInfo">
+                <h3>✅ LOGGED IN</h3>
+                <p><strong>Username:</strong> <span id="displayUsername"></span></p>
+                <p><strong>User ID:</strong> <span id="displayUserId"></span></p>
+                <button class="logout-btn" onclick="logout()">LOG OUT</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // SUPABASE CONFIG
+        const SUPABASE_URL = 'https://fghycgjxepyeocghvzie.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaHljZ2p4ZXB5ZW9jZ2h2emllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTAzMzgsImV4cCI6MjA5Nzk2NjMzOH0.fUcX8-v2JMcMCjYFYHhf8isJLILidL3G_TOzoYIoHHg';
+
+        const { createClient } = window.supabase;
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const errorDiv = document.getElementById('error');
+        const successDiv = document.getElementById('success');
+        const loginFormDiv = document.getElementById('loginForm');
+        const signupFormDiv = document.getElementById('signupForm');
+        const userInfoDiv = document.getElementById('userInfo');
+
+        // SHOW ERROR
+        function showError(message) {
+            errorDiv.textContent = '❌ ' + message;
+            errorDiv.classList.add('show');
+            setTimeout(() => {
+                errorDiv.classList.remove('show');
+            }, 5000);
+        }
+
+        // SHOW SUCCESS
+        function showSuccess(message) {
+            successDiv.textContent = '✅ ' + message;
+            successDiv.classList.add('show');
+            setTimeout(() => {
+                successDiv.classList.remove('show');
+            }, 3000);
+        }
+
+        // TOGGLE BETWEEN LOGIN AND SIGNUP
+        function toggleForms() {
+            loginFormDiv.classList.toggle('hidden');
+            signupFormDiv.classList.toggle('hidden');
+            errorDiv.classList.remove('show');
+            successDiv.classList.remove('show');
+            document.getElementById('loginFormElement').reset();
+            document.getElementById('signupFormElement').reset();
+        }
+
+        // LOGIN SUBMIT
+        document.getElementById('loginFormElement').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            if (!username || !password) {
+                showError('USERNAME AND PASSWORD REQUIRED');
+                return;
+            }
+
+            document.getElementById('loginBtn').disabled = true;
+            document.getElementById('loginLoading').style.display = 'block';
+
+            try {
+                // FETCH USER
+                const { data: users, error: queryError } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('username', username)
+                    .single();
+
+                if (queryError || !users) {
+                    showError('USER NOT FOUND');
+                    document.getElementById('loginBtn').disabled = false;
+                    document.getElementById('loginLoading').style.display = 'none';
+                    return;
+                }
+
+                // CHECK PASSWORD
+                if (users.password !== password) {
+                    showError('INVALID PASSWORD');
+                    document.getElementById('loginBtn').disabled = false;
+                    document.getElementById('loginLoading').style.display = 'none';
+                    return;
+                }
+
+                // LOGIN SUCCESS
+                showSuccess('LOGGED IN SUCCESSFULLY!');
+                displayUserInfo(users);
+                document.getElementById('loginFormElement').reset();
+
+            } catch (error) {
+                showError('ERROR: ' + error.message);
+                console.error('Login error:', error);
+            } finally {
+                document.getElementById('loginBtn').disabled = false;
+                document.getElementById('loginLoading').style.display = 'none';
+            }
+        });
+
+        // SIGNUP SUBMIT
+        document.getElementById('signupFormElement').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const username = document.getElementById('signupUsername').value.trim();
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('signupConfirmPassword').value;
+
+            if (!username || !password || !confirmPassword) {
+                showError('USERNAME AND PASSWORD REQUIRED');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showError('PASSWORDS DO NOT MATCH');
+                return;
+            }
+
+            if (password.length < 6) {
+                showError('PASSWORD MUST BE AT LEAST 6 CHARACTERS');
+                return;
+            }
+
+            document.getElementById('signupBtn').disabled = true;
+            document.getElementById('signupLoading').style.display = 'block';
+
+            try {
+                // CREATE USER
+                const { data: newUser, error: insertError } = await supabase
+                    .from('users')
+                    .insert([{
+                        username: username,
+                        password: password,
+                        created_at: new Date()
+                    }])
+                    .select()
+                    .single();
+
+                if (insertError) {
+                    if (insertError.message.includes('duplicate')) {
+                        showError('USERNAME ALREADY EXISTS');
+                    } else {
+                        showError('ERROR: ' + insertError.message);
+                    }
+                    document.getElementById('signupBtn').disabled = false;
+                    document.getElementById('signupLoading').style.display = 'none';
+                    return;
+                }
+
+                showSuccess('ACCOUNT CREATED! LOGGING IN...');
+                setTimeout(() => {
+                    displayUserInfo(newUser);
+                    toggleForms();
+                    document.getElementById('signupFormElement').reset();
+                }, 1500);
+
+            } catch (error) {
+                showError('ERROR: ' + error.message);
+                console.error('Signup error:', error);
+            } finally {
+                document.getElementById('signupBtn').disabled = false;
+                document.getElementById('signupLoading').style.display = 'none';
+            }
+        });
+
+        // DISPLAY USER INFO
+        function displayUserInfo(userData) {
+            document.getElementById('displayUsername').textContent = userData.username;
+            document.getElementById('displayUserId').textContent = userData.id;
+
+            loginFormDiv.classList.add('hidden');
+            signupFormDiv.classList.add('hidden');
+            userInfoDiv.classList.add('show');
+
+            localStorage.setItem('instagramUser', JSON.stringify(userData));
+        }
+
+        // LOGOUT
+        function logout() {
+            localStorage.removeItem('instagramUser');
+            loginFormDiv.classList.remove('hidden');
+            signupFormDiv.classList.add('hidden');
+            userInfoDiv.classList.remove('show');
+            document.getElementById('loginFormElement').reset();
+            showSuccess('LOGGED OUT');
+        }
+
+        // CHECK IF ALREADY LOGGED IN
+        window.addEventListener('load', () => {
+            const savedUser = localStorage.getItem('instagramUser');
+            if (savedUser) {
+                const user = JSON.parse(savedUser);
+                displayUserInfo(user);
+            }
+        });
+    </script>
+</body>
+</html>
